@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scan</title>
+    <style>
+        body {
+            background-color: #000000;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+        h1 {
+            text-align: center;
+        }
+        #result {
+            text-align: left;
+            white-space: pre-wrap;
+            margin: auto;
+            width: 50%;
+        }
+        input, button, select {
+            background-color: #000000;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            padding: 5px 10px;
+        }
+        form {
+            text-align: center;
+        }
+    </style>
+    <script>
+    function pasteURL() {
+        navigator.clipboard.readText()
+        .then(text => {
+            document.getElementById('url').value = text;
+        })
+        .catch(err => {
+            console.error('Could not read clipboard: ', err);
+        });
+    }
+
+    function submitForm() {
+        const operation = document.getElementById('operation').value;
+        const url = document.getElementById('url').value;
+        const urlInput = document.getElementById('url');
+        urlInput.name = operation === 'scan' ? 'url' : 'url_hash';
+        fetch('/' + operation, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `${urlInput.name}=${encodeURIComponent(url)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('result').textContent = data.result;
+        })
+        .catch(err => {
+            console.error('Error:', err);
+        });
+        return false;
+    }
+
+    function updatePlaceholder() {
+        const operation = document.getElementById('operation').value;
+        const urlInput = document.getElementById('url');
+        urlInput.placeholder = operation === 'scan' ? 'url' : 'url_hash';
+    }
+    </script>
+</head>
+<body>
+    <h1>Gepetto</h1>
+    <form onsubmit="return submitForm();">
+        <select id="operation" onchange="updatePlaceholder()">
+            <option value="scan">Scan</option>
+            <option value="report">Report</option>
+            <option value="screenshot">Screenshot</option>
+        </select>
+        <input type="text" id="url" name="url" placeholder="url">
+        <button type="button" onclick="pasteURL()">Paste</button><br>
+        <input type="submit" value="Go">
+    </form>
+    <div id="result"></div>
+</body>
+</html>
